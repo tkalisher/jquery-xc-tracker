@@ -13,22 +13,23 @@ $(document).ready(function () {
         $('#reset-button').hide();
         $('#add-team-button').hide();
         $('#stop-button').show();
-        console.log(($('#teams').children()[1]))
-        
-        
+        $('.place-runner').prop('disabled', false);
+        $('.x-button').hide()
+
+
         const startTime = Date.now();
         const update = setInterval(updateTime, 1, startTime);
         $('#stop-button').click(function () {
             clearInterval(update)
-             final_scores = {} //teamName, totalPoints (less is better)
-             for (let t of teams) {
-                 final_scores[t] = [];
-             }
-             console.log(final_scores)
-             for (let f of finish_table) {
-                 final_scores[f[2]].push(f[0])
-             }
-             console.log(final_scores)
+            final_scores = {} //teamName, totalPoints (less is better)
+            for (let t of teams) {
+                final_scores[t] = [];
+            }
+            console.log(final_scores)
+            for (let f of finish_table) {
+                final_scores[f[2]].push(f[0])
+            }
+            console.log(final_scores)
             $('#start-button').show();
             $('#reset-button').show();
             $('#stop-button').hide();
@@ -74,11 +75,11 @@ $(document).ready(function () {
 
         function onSubmit() {
             teamName = $('.team-name').val()
-            
+
             teamColor = $('.team-color').val();
             alreadyTaken = false
-            for(let t of teams) {
-                if(teamName == t){
+            for (let t of teams) {
+                if (teamName == t) {
                     alreadyTaken = true
                 }
             }
@@ -95,21 +96,46 @@ $(document).ready(function () {
             } else {
                 teams.push(teamName)
                 console.log(`New Team ${teamName} has been added!`);
-                $("#teams").prepend(`<button type="button" class="btn col w-25 p-2 mb-5 " id="${teamName.replace(/ /g, '')}-button"
-            style="background-color:${teamColor};">
-            ${teamName}<button type="button" class=" btn-close" style="background-color:${teamColor};"
-                aria-label="Close"></button>
-        </button>`)
+                const newButton = (
+                    `<div class="card col w-25 p-2 mb-5" id="${teamName.replace(/ /g, '')}-div" >
+                    <div class="card-header" style="background-color:${teamColor};">
+                        ${teamName}
+                         <button type="button" class="btn-close float-right pl-5 x-button"  aria-label="Close"></button>
+                    </div>
+                    
+                        <button type="button" class="btn btn-block border border-dark place-runner" id="${teamName.replace(/ /g, '')}-button" disabled>
+                            Place Runner
+                        </button>
+                </div>`);
+                $("#teams").prepend(newButton)
+
+
+
+                $(".x-button").click(function () {
+                    console.log(`${teamName} has been deleted!`);
+                    let card = $(this).parent().parent()
+                    card.fadeOut(300, function () {
+                        card.remove();
+                    });
+                })
+
+
+
                 $(`#${teamName.replace(/ /g, '')}-button`).click(function () {
+                    myTeam = $(this).parent().find('div').text().replace(/\r?\n|\r/g, "").trim();
+                    myColor = $(this).parent().find('div').css('background-color')
                     currTime = $('#clock div').text() + "." + $('#clock small').text().substring(1)
-                    finish_table.push([place, currTime, $(this).text(), $(this).css('background-color')])
+                    finish_table.push([place, currTime, myTeam, myColor])
 
 
-                    newRow = `<tr style="background-color:${$(this).css('background-color')};">
-                <th scope="col">${place}</th>
-                <td>${currTime}</th>
-                <td>${$(this).text()}</th>
-                </tr>`
+                    newRow = (
+                        `<tr style="background-color:${myColor};">
+                        <th scope="col">${place}</th>
+                        <td>${currTime}</th>
+                        <td>${myTeam}</th>
+                    </tr>`);
+
+
                     $("#finish-table-body").append(newRow)
                     console.log(finish_table)
                     place++
@@ -118,12 +144,12 @@ $(document).ready(function () {
 
                 $("#add-team-button").prop('disabled', false)
             }
-            
+
         }
 
-    
+
 
 
     })
-   
+
 })

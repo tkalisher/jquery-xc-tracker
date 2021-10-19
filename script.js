@@ -2,6 +2,7 @@ $('#stop-button').hide();
 $(document).ready(function () {
     $('#stop-button').hide();
     const finish_table = [];
+    const teams = [];
     let place = 1;
     $('#reset-button').click(function () {
         console.log(this.id)
@@ -9,67 +10,120 @@ $(document).ready(function () {
 
     $('#start-button').click(function () {
         $('#start-button').hide();
+        $('#reset-button').hide();
+        $('#add-team-button').hide();
         $('#stop-button').show();
+        console.log(($('#teams').children()[1]))
+        
+        
         const startTime = Date.now();
         const update = setInterval(updateTime, 1, startTime);
         $('#stop-button').click(function () {
             clearInterval(update)
-            console.log("finished")
+             final_scores = {} //teamName, totalPoints (less is better)
+             for (let t of teams) {
+                 final_scores[t] = [];
+             }
+             console.log(final_scores)
+             for (let f of finish_table) {
+                 final_scores[f[2]].push(f[0])
+             }
+             console.log(final_scores)
             $('#start-button').show();
+            $('#reset-button').show();
             $('#stop-button').hide();
         })
 
         function updateTime(startTime) {
             const d = new Date();
-            let raw_ms = new Date(d.getTime() - startTime)
+            let raw_ms = new Date(d.getTime() - startTime).format("mm:ss fff")
 
-            $("#clock").text(raw_ms.format('mm:ss fff'))
+
+            $("#clock div").text(raw_ms.substring(0, 5))
+            $("#clock small").text(raw_ms.substring(5))
         }
     });
+    $("#reset-button").click(reset)
+
+    function reset() {
+        window.location = window.location
+    }
     $('#add-team-button').click(function () {
 
         $("#add-team-button").prop('disabled', true)
-        const addTeamForm = `<form class="add-team-form">
-        <label for="team-name">Team name:</label>
-        <input class="team-name">
-        <label for="team-color">Team color</label>
-        <input class="team-color" type="color" value="#ff0000">
-        <button type="button" class="submit-new-team">Submit</button>
-    </form>`
+        const addTeamForm = `
+        <form class="add-team-form">
+        <br>
+            <div class="row">
+                <div class="col-7">
+                    <input class="team-name form-control color-input" placeholder="Team Name">
+                </div>
+                <div class="col-1">
+                
+                    <input class = "team-color form-control form-control-color"
+                    type = "color"
+                    value = "#f2f2f2">
+                </div>
+                <div class="col-4">
+                    <button type="button" class="submit-new-team btn btn-success btn-block">Add</button>
+                </div>
+            </div>
+        </form>`
         $('#form-p').append(addTeamForm);
         $('.submit-new-team').click(onSubmit);
 
         function onSubmit() {
-            teamName = $('.team-name').val();
+            teamName = $('.team-name').val()
+            
             teamColor = $('.team-color').val();
-            if (teamName === '') {
-                alert("Please enter a team name.");
+            alreadyTaken = false
+            for(let t of teams) {
+                if(teamName == t){
+                    alreadyTaken = true
+                }
+            }
+            if (teamName === '' ||
+                teamName.startsWith(",") || alreadyTaken) {
                 $(".add-team-form").remove();
                 $("#add-team-button").prop('disabled', false)
-                return
-            }
-            console.log(`New Team ${teamName} has been added!`);
-            $("#teams").append(`<button type="button" id="${teamName}-button" style="color:${teamColor};">${teamName}</button>`)
-            $(`#${teamName}-button`).click(function () {
+                const alertMsg = `<br><div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <strong>Try again!</strong> Please enter a valid team name or one that hasn't been taken.
+                    </div>`
+                $('#form-p').append(alertMsg);
 
-                finish_table.push([place, $('#clock').text(), $(this).text(), $(this).css('color')])
+            } else {
+                teams.push(teamName)
+                console.log(`New Team ${teamName} has been added!`);
+                $("#teams").prepend(`<button type="button" class="btn col w-25 p-2 mb-5 " id="${teamName.replace(/ /g, '')}-button"
+            style="background-color:${teamColor};">
+            ${teamName}<button type="button" class=" btn-close" style="background-color:${teamColor};"
+                aria-label="Close"></button>
+        </button>`)
+                $(`#${teamName.replace(/ /g, '')}-button`).click(function () {
+                    currTime = $('#clock div').text() + "." + $('#clock small').text().substring(1)
+                    finish_table.push([place, currTime, $(this).text(), $(this).css('background-color')])
 
-                newRow = `<tr>
-                <th>${place}</th>
-                <th>${$('#clock').text()}</th>
-                <th>${$(this).text()}</th>
+
+                    newRow = `<tr style="background-color:${$(this).css('background-color')};">
+                <th scope="col">${place}</th>
+                <td>${currTime}</th>
+                <td>${$(this).text()}</th>
                 </tr>`
-                $("#finish-table-body").append(newRow)
-                console.log(finish_table)
-                place++
-            })
-            $(".add-team-form").remove();
+                    $("#finish-table-body").append(newRow)
+                    console.log(finish_table)
+                    place++
+                })
+                $(".add-team-form").remove();
 
-            $("#add-team-button").prop('disabled', false)
+                $("#add-team-button").prop('disabled', false)
+            }
+            
         }
 
+    
 
 
     })
-
-});
+   
+})
